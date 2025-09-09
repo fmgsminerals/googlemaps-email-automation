@@ -1,1 +1,34 @@
+name: Nightly Lead Pull + Campaign
+on:
+schedule:
+- cron: "30 18 * * *" # 11:30 PM Asia/Karachi (UTC+5)
+workflow_dispatch:
 
+
+jobs:
+run:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v5
+with:
+python-version: "3.11"
+- name: Install deps
+run: |
+pip install -r requirements.txt
+- name: Write service account file (optional)
+if: ${{ secrets.GCP_SERVICE_ACCOUNT_JSON != '' }}
+run: |
+echo "${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}" > service_account.json
+- name: Ingest + Send (Emerald Gemstones)
+env:
+GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+AWS_REGION: ${{ secrets.AWS_REGION }}
+AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+SES_SENDER: ${{ secrets.SES_SENDER }}
+run: |
+python scripts/run_ingest.py "Rough Emerald Gemstones in New York City, USA" "Emerald Gemstones"
+python scripts/run_campaign.py "Emerald Gemstones"
